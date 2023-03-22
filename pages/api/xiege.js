@@ -1,7 +1,5 @@
-const http = require('http');
 
-const server = http.createServer((req, res) => {
-  console.log(req.url);
+export default async function (req, res) {
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     // Connection: 'close',
@@ -19,10 +17,4 @@ const server = http.createServer((req, res) => {
     res.write(`data: ${JSON.stringify({ message: 'Third message' })}\n\n`);
     res.end();
   }, 2000);
-});
-
-const PORT = 3001;
-
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+}

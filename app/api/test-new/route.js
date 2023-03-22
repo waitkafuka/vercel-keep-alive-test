@@ -25,7 +25,9 @@ process.env.NODE_ENV === 'development'
 const openai = new OpenAIApi(configuration);
 
 // eslint-disable-next-line import/prefer-default-export
-export async function GET(req, res) {
+export async function POST(req, res) {
+  // 设置响应头cors
+
   const payload = {
     model: 'gpt-3.5-turbo',
     messages: [{ role: 'user', content: 'hello' }],
@@ -91,5 +93,11 @@ export async function GET(req, res) {
     },
   });
 
-  return new Response(stream);
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Access-Control-Allow-Origin': '*',
+    },
+  });
 }

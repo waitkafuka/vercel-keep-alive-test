@@ -1,7 +1,7 @@
 
 export default async function (req, res) {
   res.writeHead(200, {
-    'Content-Type': 'text/event-stream',
+    // 'Content-Type': 'text/event-stream',
     Connection: 'close',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',

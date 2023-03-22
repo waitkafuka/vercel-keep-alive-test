@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { Readable } = require('stream');
 export default async function (req, res) {
   res.writeHead(200, {
     // 'Content-Type': 'text/event-stream',
@@ -8,6 +9,32 @@ export default async function (req, res) {
     'Access-Control-Allow-Headers': 'Content-Type',
   });
 
-  const readStream = fs.createReadStream(__dirname+'/demo.js');
-  readStream.pipe(res);
+  // const stream = new ReadableStream({
+  //   start(controller) {
+  //     setInterval(() => {
+  //       const rand = Math.round(Math.random());
+  //       if (rand > 7) {
+  //         controller.close();
+  //       }
+  //       controller.enqueue(`data: ${rand}\n\n`);
+  //     }, 1000);
+  //   },
+  // });
+  let count = 0;
+  const stream = new Readable({
+    read() {
+      // 定期推送数据
+      setInterval(() => {
+        const data = `Count: ${count++}\n`;
+        if (count > 5) {
+          this.push(null);
+        } else {
+          this.push(data);
+        }
+      }, 1000);
+    },
+  });
+  // const readStream2 = fs.createReadStream(__dirname + '/demo.js');
+  // readStream.pipe(res);
+  stream.pipe(res);
 }

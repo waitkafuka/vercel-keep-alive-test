@@ -5,10 +5,11 @@ const decoder = new TextDecoder();
 const encoder = new TextEncoder();
 
 // export const runtime = 'edge';
+// export const runtime = 'experimental-edge';
 
-export const config = {
-  runtime: 'edge',
-};
+// export const config = {
+//   runtime: 'edge',
+// };
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -23,7 +24,8 @@ process.env.NODE_ENV === 'development'
   });
 const openai = new OpenAIApi(configuration);
 
-export default async function (req, res) {
+// eslint-disable-next-line import/prefer-default-export
+export async function GET(req, res) {
   const payload = {
     model: 'gpt-3.5-turbo',
     messages: [{ role: 'user', content: 'hello' }],
@@ -34,28 +36,27 @@ export default async function (req, res) {
     n: 1,
   };
 
-  const chatResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-    },
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-
-  // const chatResponse = await openai.createChatCompletion(
-  //   {
-  //     model: 'gpt-3.5-turbo',
-  //     messages: [
-  //       {
-  //         role: 'user',
-  //         content: 'hello',
-  //       },
-  //     ],
-  //     stream: true,
+  // const chatResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //     Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
   //   },
-  //   { responseType: 'stream' },
-  // );
+  //   method: 'POST',
+  //   body: JSON.stringify(payload),
+  // });
+  const chatResponse = await openai.createChatCompletion(
+    {
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'user',
+          content: 'hello',
+        },
+      ],
+      stream: true,
+    },
+    { responseType: 'stream' },
+  );
 
   const stream = new ReadableStream({
     async start(controller) {

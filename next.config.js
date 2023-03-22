@@ -1,5 +1,6 @@
 const nextConfig = {
   experimental: {
+    appDir: true,
     transpilePackages: ['tdesign-react'],
   },
 };

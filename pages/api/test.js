@@ -6,9 +6,9 @@ const encoder = new TextEncoder();
 
 // export const runtime = 'edge';
 
-// export const config = {
-//   runtime: 'edge',
-// };
+export const config = {
+  runtime: 'edge',
+};
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -33,62 +33,65 @@ export default async function (req, res) {
     stream: true,
     n: 1,
   };
+  let stream;
+  try {
+    const chatResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      },
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
 
-  const chatResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-    },
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
+    // const chatResponse = await openai.createChatCompletion(
+    //   {
+    //     model: 'gpt-3.5-turbo',
+    //     messages: [
+    //       {
+    //         role: 'user',
+    //         content: 'hello',
+    //       },
+    //     ],
+    //     stream: true,
+    //   },
+    //   { responseType: 'stream' },
+    // );
 
-  // const chatResponse = await openai.createChatCompletion(
-  //   {
-  //     model: 'gpt-3.5-turbo',
-  //     messages: [
-  //       {
-  //         role: 'user',
-  //         content: 'hello',
-  //       },
-  //     ],
-  //     stream: true,
-  //   },
-  //   { responseType: 'stream' },
-  // );
-
-  const stream = new ReadableStream({
-    async start(controller) {
+    stream = new ReadableStream({
+      async start(controller) {
       // callback
-      function onParse(event) {
-        if (event.type === 'event') {
-          const { data } = event;
-          // https://beta.openai.com/docs/api-reference/completions/create#completions/create-stream
-          if (data === '[DONE]') {
-            controller.close();
-            return;
-          }
-          try {
-            console.log('data', data);
-            const queue = encoder.encode(data);
-            controller.enqueue(queue);
+        function onParse(event) {
+          if (event.type === 'event') {
+            const { data } = event;
+            // https://beta.openai.com/docs/api-reference/completions/create#completions/create-stream
+            if (data === '[DONE]') {
+              controller.close();
+              return;
+            }
+            try {
+              console.log('data', data);
+              const queue = encoder.encode(data);
+              controller.enqueue(queue);
             // counter++;
-          } catch (e) {
+            } catch (e) {
             // maybe parse error
-            controller.error(e);
+              controller.error(e);
+            }
           }
         }
-      }
 
-      // stream response (SSE) from OpenAI may be fragmented into multiple chunks
-      // this ensures we properly read chunks and invoke an event for each SSE event stream
-      const parser = createParser(onParse);
-      // https://web.dev/streams/#asynchronous-iteration
-      for await (const chunk of chatResponse.data) {
-        parser.feed(decoder.decode(chunk));
-      }
-    },
-  });
-
+        // stream response (SSE) from OpenAI may be fragmented into multiple chunks
+        // this ensures we properly read chunks and invoke an event for each SSE event stream
+        const parser = createParser(onParse);
+        // https://web.dev/streams/#asynchronous-iteration
+        for await (const chunk of chatResponse.data) {
+          parser.feed(decoder.decode(chunk));
+        }
+      },
+    });
+  } catch (error) {
+    console.log(error);
+  }
   return new Response(stream);
 }
